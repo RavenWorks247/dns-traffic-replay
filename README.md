@@ -1,6 +1,6 @@
 # DNS Traffic Replay
 
-A set of Python tools to export DNS query rate patterns from Prometheus and replay them against a DNS server while preserving day‑of‑week and time‑of‑day characteristics.  
+A set of Python tools to export DNS query rate patterns from Prometheus and replay them against a DNS server while preserving **exact day‑of‑week and time‑of‑day alignment**.  
 Supports offline replay via compact JSON blueprints and direct on‑the‑fly replay from Prometheus.
 
 ---
@@ -11,6 +11,14 @@ Supports offline replay via compact JSON blueprints and direct on‑the‑fly re
 |--------|-------------|
 | `dns_traffic_blueprint.py` | Export traffic patterns from Prometheus to a portable JSON blueprint. Also includes legacy replay functionality. |
 | `traffic_replay.py` | Replay traffic from a blueprint or directly from Prometheus. Includes DNS server test, query‑type distribution, and speed control. |
+
+---
+
+## Traffic Alignment
+
+The replay engine maintains **day‑of‑week and time‑of‑day fidelity**. For each minute of the replay window, it selects the historical traffic pattern from the **same weekday and hour** (and closest minute) in the source data or blueprint. This ensures that Monday morning peaks are replayed on Monday mornings, weekend lows on weekends, and all characteristics are realistically reproduced relative to the start time.
+
+When `--replay-start` is specified, alignment is calculated against that start time; otherwise the current system time is used.
 
 ---
 
@@ -55,7 +63,7 @@ python3 dns_traffic_blueprint.py --export \
     --to   2026-01-29T04:59:59.000Z \
     --time-offset 9 \
     --step 1 \
-    --output office_pattern_accurate.json
+    --output output_traffic.json
 ```
 
 ---
@@ -104,7 +112,7 @@ sudo python3 traffic_replay.py (--blueprint FILE | --prometheus URL ...) [option
 **Replay a 14‑day blueprint at normal speed**
 ```bash
 sudo python3 traffic_replay.py \
-    --blueprint office_pattern_accurate.json \
+    --blueprint example.json \
     --ips ips.txt --domains domains.txt \
     --replay --dns-server 1.1.1.1 \
     --replay-days 14
@@ -123,7 +131,7 @@ python3 traffic_replay.py \
 **Live replay with custom DNS server and variance**
 ```bash
 sudo python3 traffic_replay.py \
-    --blueprint office_pattern_accurate.json \
+    --blueprint example.json \
     --ips ips.txt --domains domains.txt \
     --dns-server 10.0.0.53 --variance 0.3 \
     --replay-days 3 --replay
@@ -137,4 +145,5 @@ sudo python3 traffic_replay.py \
 - The system sends **UDP DNS queries only**. TCP, EDNS, DNSSEC are not simulated.  
 - The Prometheus metric `dnsdist_queries` is expected to be a counter; the query uses `rate()` to obtain QPS.  
 - The DNS server pre‑check creates a real socket to determine the source IP that will be used. Use `--no-dns-test` if this is unreliable in your environment.  
-- Blueprint files are self‑contained (kilobytes) and contain all necessary per‑minute statistics (`qps_mean`, `qps_std`, sample counts). No Prometheus connection is needed for replay.
+- Blueprint files are self‑contained (kilobytes) and contain per‑minute statistics (`qps_mean`, `qps_std`, sample counts) indexed by weekday, hour, and minute. No Prometheus connection is needed for replay.  
+- **Day‑of‑week alignment** is automatic: replay always picks the historical slot matching the current (or specified) replay time’s weekday and hour.
