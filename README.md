@@ -133,7 +133,7 @@ sudo python3 traffic_replay.py \
 
 ## Important Notes
 
-- **Root privileges** are required for live packet transmission (Scapy raw IP sockets).  
+- **Root privileges** are required for live packet transmission.  
 - The system sends **UDP DNS queries only**. TCP, EDNS, DNSSEC are not simulated.  
 - The Prometheus metric `dnsdist_queries` is expected to be a counter; the query uses `rate()` to obtain QPS.  
 - The DNS server pre‑check creates a real socket to determine the source IP that will be used. Use `--no-dns-test` if this is unreliable in your environment.  
