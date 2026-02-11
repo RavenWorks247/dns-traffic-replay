@@ -1,0 +1,15 @@
+example.com
+google.com
+github.com
+stackoverflow.com
+reddit.com
+amazon.com
+wikipedia.org
+cloudflare.com
+apple.com
+microsoft.com
+facebook.com
+twitter.com
+linkedin.com
+youtube.com
+netflix.com
