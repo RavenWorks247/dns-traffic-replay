@@ -20,7 +20,7 @@ from scapy.all import IP, UDP, DNS, DNSQR, send, sr1
 import argparse
 import sys
 import os
-import socket  # <-- added for DNS test
+import socket
 
 # Optional numpy for normal distribution (fallback to random.gauss)
 try:
@@ -48,9 +48,6 @@ class DNSTrafficReplayerAligned:
         self.blueprint_source_start_date = None
         self.skip_dns_test = False
 
-    # ----------------------------------------------------------------------
-    # Blueprint loading
-    # ----------------------------------------------------------------------
     def load_blueprint(self):
         if not self.blueprint_file:
             return False
@@ -107,9 +104,6 @@ class DNSTrafficReplayerAligned:
         print(f"[+] 95th percentile: {summary.get('p95_qps', 0):.2f}")
         return True
 
-    # ----------------------------------------------------------------------
-    # Prometheus methods (unchanged)
-    # ----------------------------------------------------------------------
     def test_prometheus_connection(self):
         url = f"{self.prometheus_url}/api/v1/query"
         params = {'query': 'up'}
@@ -239,9 +233,6 @@ class DNSTrafficReplayerAligned:
                 print(f"    - {dow_names[dow]}: {len(dow_data)} samples, avg {avg_rate:.2f} queries/bucket")
         return True
 
-    # ----------------------------------------------------------------------
-    # DNS server test (FIXED – uses real local IP)
-    # ----------------------------------------------------------------------
     def test_dns_server(self, dns_server, timeout=2):
         """Send a test query to verify DNS server is reachable and responds"""
         print(f"[*] Testing DNS server {dns_server}...", end='', flush=True)
@@ -270,9 +261,6 @@ class DNSTrafficReplayerAligned:
             print(f" ERROR ({e})")
             return False
 
-    # ----------------------------------------------------------------------
-    # Schedule generation
-    # ----------------------------------------------------------------------
     def generate_replay_schedule(self, replay_start_time=None, replay_duration_days=7,
                                  variance_factor=0.15):
         if not self.pattern_by_dow_hour and not self.blueprint_mode:
@@ -371,9 +359,6 @@ class DNSTrafficReplayerAligned:
                       f"(from {slot['source_dow_name']} {slot['source_datetime'].strftime('%H:%M') if slot['source_datetime'] else 'N/A'})")
         return schedule
 
-    # ----------------------------------------------------------------------
-    # Packet generation (realistic QTYPE distribution)
-    # ----------------------------------------------------------------------
     def generate_dns_packet(self, src_ip, domain, dns_server='8.8.8.8'):
         query_id = random.randint(1, 65535)
         query_types = ['A', 'AAAA', 'MX', 'TXT', 'CNAME']
@@ -390,9 +375,6 @@ class DNSTrafficReplayerAligned:
         udp_layer = UDP(sport=random.randint(1024, 65535), dport=53)
         return ip_layer / udp_layer / dns_query
 
-    # ----------------------------------------------------------------------
-    # Replay schedule (original verbose output)
-    # ----------------------------------------------------------------------
     def replay_schedule(self, schedule, speed_multiplier=1.0, dns_server='8.8.8.8', dry_run=False):
         if not schedule:
             print("[!] No schedule to replay")
